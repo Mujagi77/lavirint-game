@@ -1,0 +1,840 @@
+<!DOCTYPE html>
+<html lang="sr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta name="author" content="mujagi77">
+    <title>Lavirint: Smajli VS Đavo (30 Nivoa)</title>
+    <style>
+        * { box-sizing: border-box; -webkit-user-select: none; user-select: none; }
+        body {
+            background-color: #0a0a12;
+            color: #00ffcc;
+            font-family: 'Segoe UI', Roboto, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            margin: 0;
+            padding: 10px;
+            height: 100vh;
+            overflow: hidden;
+        }
+        #menuScreen, #gameScreen {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+            max-width: 400px;
+        }
+        #gameScreen { display: none; }
+        h1 { text-shadow: 0 0 10px #00ffcc; margin: 5px 0; font-size: 24px; }
+        
+        .author-tag {
+            font-size: 14px;
+            color: #ff0055;
+            font-weight: bold;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            margin-top: -5px;
+            margin-bottom: 5px;
+            text-shadow: 0 0 8px rgba(255, 0, 85, 0.6);
+        }
+
+        #highScoreMenu {
+            font-size: 13px;
+            color: #ffcc00;
+            margin-bottom: 15px;
+            font-weight: bold;
+            text-shadow: 0 0 5px rgba(255, 204, 0, 0.4);
+        }
+
+        .ui-panel {
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+            max-width: 320px;
+            margin-bottom: 8px;
+            font-weight: bold;
+            font-size: 14px;
+            background: rgba(255, 255, 255, 0.03);
+            padding: 8px;
+            border-radius: 6px;
+            border: 1px solid rgba(0, 255, 204, 0.1);
+        }
+        .ui-row {
+            display: flex;
+            justify-content: space-between;
+            margin: 2px 0;
+        }
+        
+        .canvas-container {
+            position: relative;
+            width: 320px;
+            height: 320px;
+        }
+
+        #gameCanvas {
+            border: 3px solid #00ffcc;
+            background-color: #05050a;
+            box-shadow: 0 0 20px rgba(0, 255, 204, 0.3);
+            border-radius: 8px;
+        }
+
+        #flashOverlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 320px;
+            height: 320px;
+            border-radius: 8px;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.1s ease-out;
+            z-index: 10;
+        }
+
+        .game-nav-buttons {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+            max-width: 320px;
+            margin-top: 6px;
+            margin-bottom: 8px;
+        }
+        .nav-btn {
+            background: #151525;
+            color: #fff;
+            border: 1px solid #555;
+            padding: 6px 12px;
+            font-size: 12px;
+            border-radius: 4px;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+        .nav-btn:active { background: #ff0055; border-color: #ff0055; }
+        #pauseBtn:active { background: #ff9900; border-color: #ff9900; }
+
+        .dpad-container {
+            width: 140px;
+            height: 140px;
+            position: relative;
+            margin-top: 5px;
+            touch-action: none;
+        }
+        .dpad-btn {
+            position: absolute;
+            width: 44px;
+            height: 44px;
+            background: linear-gradient(145deg, #141428, #0b0b18);
+            border: 2px solid #00ffcc;
+            border-radius: 8px;
+            color: #00ffcc;
+            font-size: 20px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 0 10px rgba(0, 255, 204, 0.2);
+            cursor: pointer;
+        }
+        .dpad-btn:active {
+            background: #00ffcc;
+            color: #0a0a12;
+            box-shadow: 0 0 15px #00ffcc;
+        }
+        #btnUp    { top: 0; left: 48px; }
+        #btnLeft  { top: 48px; left: 0; }
+        #btnRight { top: 48px; right: 0; }
+        #btnDown  { bottom: 0; left: 48px; }
+
+        .pro-btn {
+            background: transparent;
+            color: #00ffcc;
+            border: 2px solid #00ffcc;
+            padding: 12px 30px;
+            font-size: 18px;
+            font-weight: bold;
+            border-radius: 30px;
+            cursor: pointer;
+            box-shadow: 0 0 15px rgba(0, 255, 204, 0.2);
+            text-transform: uppercase;
+            margin-top: 10px;
+            width: 100%;
+            max-width: 280px;
+            text-align: center;
+        }
+        .pro-btn:active { background: #00ffcc; color: #0a0a12; }
+    </style>
+</head>
+<body>
+
+    <div id="menuScreen">
+        <h1 id="menuTitle" style="font-size: 32px; margin-bottom: 2px; text-align:center;">LAVIRINT<br><span style="color:#00ffcc; font-size: 24px;">SMAJLI VS ĐAVO</span></h1>
+        <div class="author-tag">by mujagi77</div>
+        <div id="highScoreMenu">NAJBOLJI REKORD: 0000</div>
+        <p id="menuSubtitle" style="text-align: center; color: #bbb; margin-bottom: 20px; padding: 0 15px; font-size: 14px; line-height: 1.5;">
+            Pobegni đavolu 😈! Nivoi 1-20 donose duhove 👻 i kapije ⏳. Nivoi 21-30 donose opasne vatrene zone 🔥 i portale za teleportaciju 🌀!
+        </p>
+        <button class="pro-btn" id="startBtn">Započni Igru</button>
+        <button class="pro-btn" id="continueBtn" style="display: none; border-color: #ff9900; color: #ff9900;">Nastavi (Nivo <span id="continueLevel">1</span>)</button>
+    </div>
+
+    <div id="gameScreen">
+        <div class="ui-panel">
+            <div class="ui-row">
+                <div id="levelDisplay">Nivo: 1/30</div>
+                <div id="livesDisplay" style="color: #ff0055;">Životi: ❤️❤️❤️</div>
+            </div>
+            <div class="ui-row" style="margin-top: 4px;">
+                <div id="scoreDisplay">Score: 0000</div>
+                <div id="statusDisplay" style="color: #00ffcc;">Pobegni!</div>
+            </div>
+        </div>
+        
+        <div class="canvas-container">
+            <canvas id="gameCanvas" width="320" height="320"></canvas>
+            <div id="flashOverlay"></div>
+        </div>
+
+        <div class="game-nav-buttons">
+            <button class="nav-btn" id="pauseBtn">Pauziraj</button>
+            <button class="nav-btn" id="quitBtn">Prekini</button>
+        </div>
+
+        <div class="dpad-container">
+            <div class="dpad-btn" id="btnUp">▲</div>
+            <div class="dpad-btn" id="btnLeft">◀</div>
+            <div class="dpad-btn" id="btnRight">▶</div>
+            <div class="dpad-btn" id="btnDown">▼</div>
+        </div>
+    </div>
+
+<script>
+// --- AUDIO SISTEM ---
+let audioCtx = null;
+function initAudio() {
+    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume();
+}
+function playTone(freq, type, duration) {
+    initAudio();
+    if (!audioCtx) return;
+    try {
+        let osc = audioCtx.createOscillator();
+        let gain = audioCtx.createGain();
+        osc.type = type;
+        osc.frequency.value = freq;
+        gain.gain.setValueAtTime(0.04, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start();
+        osc.stop(audioCtx.currentTime + duration);
+    } catch(e) {}
+}
+const sounds = {
+    move: () => playTone(350, 'triangle', 0.04),
+    gate: () => playTone(180, 'sawtooth', 0.08),
+    coin: () => { playTone(880, 'sine', 0.05); setTimeout(() => playTone(1320, 'sine', 0.08), 40); },
+    win: () => { playTone(440, 'square', 0.1); setTimeout(() => playTone(880, 'square', 0.25), 80); },
+    lose: () => { playTone(220, 'sawtooth', 0.15); setTimeout(() => playTone(120, 'sawtooth', 0.35), 150); },
+    ghost: () => playTone(290, 'sine', 0.12),
+    portal: () => { playTone(600, 'sine', 0.1); setTimeout(() => playTone(1200, 'sine', 0.15), 60); },
+    fireWarn: () => playTone(250, 'sawtooth', 0.2),
+    fireBurn: () => playTone(100, 'noise' in audioCtx ? 'noise' : 'sawtooth', 0.3)
+};
+
+// --- MAPA OD 30 NIVOA ---
+const levels = [
+    // NIVOI 1 - 10
+    [[1,1,1,1,1,1,1,1],[1,0,0,0,1,3,0,1],[1,0,1,0,2,1,0,1],[1,0,1,0,0,0,0,1],[1,0,1,1,1,0,1,1],[1,4,0,2,0,0,5,1],[1,0,1,0,1,1,0,1],[1,1,1,1,1,1,1,1]],
+    [[1,1,1,1,1,1,1,1],[1,3,0,0,0,0,0,1],[1,1,1,2,1,1,0,1],[1,0,0,0,0,1,0,1],[1,0,1,1,0,1,0,1],[1,0,2,1,0,2,0,1],[1,4,0,0,0,1,5,1],[1,1,1,1,1,1,1,1]],
+    [[1,1,1,1,1,1,1,1],[1,5,0,0,1,0,3,1],[1,0,1,0,1,0,1,1],[1,2,1,0,2,0,0,1],[1,0,1,1,1,1,0,1],[1,0,0,0,2,1,0,1],[1,1,0,0,4,0,0,1],[1,1,1,1,1,1,1,1]],
+    [[1,1,1,1,1,1,1,1],[1,5,1,0,0,0,0,1],[1,0,2,0,1,1,0,1],[1,0,1,0,1,3,0,1],[1,0,1,0,1,1,2,1],[1,0,1,0,0,0,0,1],[1,4,0,0,1,1,0,1],[1,1,1,1,1,1,1,1]],
+    [[1,1,1,1,1,1,1,1],[1,3,0,1,0,0,5,1],[1,1,0,1,0,1,0,1],[1,0,0,2,0,1,0,1],[1,0,1,1,1,1,0,1],[1,0,2,0,2,0,0,1],[1,4,1,1,1,1,0,1],[1,1,1,1,1,1,1,1]],
+    [[1,1,1,1,1,1,1,1],[1,4,0,0,0,0,5,1],[1,0,1,1,2,1,1,1],[1,0,1,3,0,0,0,1],[1,0,1,1,2,1,0,1],[1,0,0,0,0,1,0,1],[1,1,1,1,0,0,0,1],[1,1,1,1,1,1,1,1]],
+    [[1,1,1,1,1,1,1,1],[1,5,0,0,1,0,0,1],[1,0,1,0,1,0,1,1],[1,2,1,0,2,0,3,1],[1,0,1,0,1,1,1,1],[1,0,1,0,0,0,2,1],[1,4,0,0,1,1,0,1],[1,1,1,1,1,1,1,1]],
+    [[1,1,1,1,1,1,1,1],[1,5,0,0,0,0,3,1],[1,0,1,1,1,1,2,1],[1,0,2,0,0,1,0,1],[1,1,1,1,0,1,0,1],[1,4,0,2,0,0,0,1],[1,0,1,1,1,1,1,1],[1,1,1,1,1,1,1,1]],
+    [[1,1,1,1,1,1,1,1],[1,3,2,0,0,0,5,1],[1,1,1,1,1,0,1,1],[1,0,0,0,2,0,0,1],[1,0,1,1,1,1,0,1],[1,0,2,0,2,1,0,1],[1,4,1,0,0,0,0,1],[1,1,1,1,1,1,1,1]],
+    [[1,1,1,1,1,1,1,1],[1,4,0,2,3,2,5,1],[1,0,1,1,1,1,0,1],[1,0,2,0,0,2,0,1],[1,1,1,0,1,1,1,1],[1,0,2,0,2,0,0,1],[1,0,1,1,1,1,0,1],[1,1,1,1,1,1,1,1]],
+    
+    // NIVOI 11 - 20
+    [[1,1,1,1,1,1,1,1],[1,4,0,0,1,0,3,1],[1,0,1,0,2,1,0,1],[1,0,2,0,0,0,6,1],[1,1,1,0,1,1,0,1],[1,5,0,0,0,2,0,1],[1,0,1,1,1,1,0,1],[1,1,1,1,1,1,1,1]],
+    [[1,1,1,1,1,1,1,1],[1,3,0,2,0,0,5,1],[1,1,0,1,1,1,0,1],[1,0,0,0,6,1,0,1],[1,0,1,2,0,1,0,1],[1,0,1,0,0,0,0,1],[1,4,1,0,1,1,2,1],[1,1,1,1,1,1,1,1]],
+    [[1,1,1,1,1,1,1,1],[1,5,0,0,0,0,3,1],[1,0,1,1,2,1,1,1],[1,0,6,0,0,0,0,1],[1,1,1,1,0,1,2,1],[1,4,0,2,0,1,0,1],[1,0,1,1,0,0,0,1],[1,1,1,1,1,1,1,1]],
+    [[1,1,1,1,1,1,1,1],[1,4,2,0,0,2,5,1],[1,0,1,1,0,1,1,1],[1,0,0,6,0,0,3,1],[1,1,1,0,1,1,0,1],[1,0,0,0,2,0,0,1],[1,0,1,1,1,1,0,1],[1,1,1,1,1,1,1,1]],
+    [[1,1,1,1,1,1,1,1],[1,3,0,0,1,0,5,1],[1,1,2,0,1,0,1,1],[1,0,0,0,2,0,6,1],[1,0,1,1,1,0,1,1],[1,4,0,0,0,0,0,1],[1,1,1,2,1,1,0,1],[1,1,1,1,1,1,1,1]],
+    [[1,1,1,1,1,1,1,1],[1,5,0,2,0,0,3,1],[1,0,1,1,1,1,0,1],[1,0,6,0,2,1,0,1],[1,1,1,0,0,0,0,1],[1,4,0,0,1,1,2,1],[1,0,1,0,0,0,0,1],[1,1,1,1,1,1,1,1]],
+    [[1,1,1,1,1,1,1,1],[1,3,0,0,0,6,5,1],[1,1,1,2,1,1,0,1],[1,0,0,0,0,1,0,1],[1,0,1,1,0,2,0,1],[1,0,2,1,0,1,0,1],[1,4,0,0,0,1,0,1],[1,1,1,1,1,1,1,1]],
+    [[1,1,1,1,1,1,1,1],[1,5,1,0,0,0,3,1],[1,0,2,0,1,1,0,1],[1,0,1,0,6,1,0,1],[1,0,1,2,0,1,2,1],[1,0,1,0,0,0,0,1],[1,4,0,0,1,1,0,1],[1,1,1,1,1,1,1,1]],
+    [[1,1,1,1,1,1,1,1],[1,3,0,1,0,0,5,1],[1,1,0,1,6,1,0,1],[1,0,0,2,0,1,0,1],[1,0,1,1,1,1,0,1],[1,0,2,0,2,0,0,1],[1,4,1,0,0,2,0,1],[1,1,1,1,1,1,1,1]],
+    [[1,1,1,1,1,1,1,1],[1,4,0,2,3,2,5,1],[1,0,1,6,1,1,0,1],[1,0,2,0,0,2,0,1],[1,1,1,0,1,1,0,1],[1,0,2,0,6,0,0,1],[1,5,1,1,1,1,0,1],[1,1,1,1,1,1,1,1]],
+
+    // NIVOI 21 - 30 (Vatra i Portali)
+    [[1,1,1,1,1,1,1,1],[1,4,0,0,9,0,3,1],[1,1,7,1,1,0,1,1],[1,0,0,0,9,0,0,1],[1,0,1,1,1,8,1,1],[1,5,0,0,9,0,0,1],[1,0,0,0,0,0,0,1],[1,1,1,1,1,1,1,1]],
+    [[1,1,1,1,1,1,1,1],[1,3,0,9,0,0,5,1],[1,1,0,1,1,1,0,1],[1,7,0,0,0,1,8,1],[1,0,1,9,0,1,0,1],[1,0,1,0,0,9,0,1],[1,4,0,0,0,0,0,1],[1,1,1,1,1,1,1,1]],
+    [[1,1,1,1,1,1,1,1],[1,5,0,0,9,0,3,1],[1,0,1,1,0,1,1,1],[1,7,9,0,0,9,8,1],[1,1,1,1,0,1,0,1],[1,4,0,0,9,0,0,1],[1,0,1,1,0,0,0,1],[1,1,1,1,1,1,1,1]],
+    [[1,1,1,1,1,1,1,1],[1,4,0,0,7,0,5,1],[1,0,1,1,9,1,1,1],[1,0,9,0,0,0,3,1],[1,1,1,0,1,1,9,1],[1,8,0,0,9,0,0,1],[1,0,1,1,1,1,0,1],[1,1,1,1,1,1,1,1]],
+    [[1,1,1,1,1,1,1,1],[1,3,0,0,1,0,5,1],[1,1,7,0,1,0,1,1],[1,9,0,9,0,9,0,1],[1,0,1,1,1,0,1,1],[1,4,0,8,1,0,0,1],[1,1,0,0,9,0,0,1],[1,1,1,1,1,1,1,1]],
+    [[1,1,1,1,1,1,1,1],[1,5,0,9,0,0,3,1],[1,0,1,1,1,1,0,1],[1,7,0,9,0,1,8,1],[1,1,1,0,0,9,0,1],[1,4,0,0,1,1,0,1],[1,0,1,0,9,0,0,1],[1,1,1,1,1,1,1,1]],
+    [[1,1,1,1,1,1,1,1],[1,3,9,0,7,0,5,1],[1,1,1,0,1,1,9,1],[1,0,0,0,0,1,0,1],[1,9,1,1,0,0,0,1],[1,0,0,1,0,1,8,1],[1,4,0,9,0,1,0,1],[1,1,1,1,1,1,1,1]],
+    [[1,1,1,1,1,1,1,1],[1,5,1,0,9,0,3,1],[1,7,0,0,1,1,0,1],[1,0,1,0,0,1,8,1],[1,9,1,0,0,1,0,1],[1,0,1,9,0,0,0,1],[1,4,0,0,1,1,9,1],[1,1,1,1,1,1,1,1]],
+    [[1,1,1,1,1,1,1,1],[1,3,0,1,0,9,5,1],[1,1,0,1,7,1,0,1],[1,8,0,9,0,1,0,1],[1,0,1,1,1,1,9,1],[1,0,9,0,0,0,0,1],[1,4,1,9,0,0,0,1],[1,1,1,1,1,1,1,1]],
+    [[1,1,1,1,1,1,1,1],[1,4,9,0,3,0,5,1],[1,7,1,1,1,1,9,1],[1,0,0,0,9,0,0,1],[1,1,1,0,1,1,8,1],[1,9,0,0,9,0,9,1],[1,5,1,1,1,1,0,1],[1,1,1,1,1,1,1,1]]
+];
+
+const canvas = document.getElementById("gameCanvas");
+const ctx = canvas.getContext("2d");
+const flashOverlay = document.getElementById("flashOverlay");
+const TILE_SIZE = 40;
+
+let currentLevelIndex = 0;
+let map = levels[currentLevelIndex];
+
+let player = { x: 0, y: 0 };
+let enemy = { x: 0, y: 0, speed: 35, counter: 0 };
+let ghost = { x: -100, y: -100, active: false, visible: false, counter: 0, speed: 45 };
+
+let portalA = { x: -100, y: -100, active: false };
+let portalB = { x: -100, y: -100, active: false };
+let fireZones = []; 
+let activeFireIndex = -1;
+let fireState = "off";
+let fireTimer = 0;
+
+let gates = [];
+let coins = [];
+let gatesOpen = false;
+
+let gameOver = false;
+let gameWon = false;
+let isPaused = false;
+let lives = 3;
+let score = 0;
+let animationId = null;
+
+let activeAnimation = null;
+let causeOfDeath = "enemy"; 
+
+let highScore = localStorage.getItem("mazeHighScore") || 0;
+document.getElementById("highScoreMenu").innerText = `NAJBOLJI REKORD: ${String(highScore).padStart(4, '0')}`;
+
+function triggerFlashEffect(color) {
+    flashOverlay.style.backgroundColor = color;
+    flashOverlay.style.opacity = "0.6";
+    setTimeout(() => { flashOverlay.style.opacity = "0"; }, 150);
+}
+
+function startTextAnimation(text, color) {
+    activeAnimation = { text: text, size: 14, alpha: 1.0, color: color };
+}
+
+function updateUI() {
+    document.getElementById("levelDisplay").innerText = `Nivo: ${currentLevelIndex + 1}/30`;
+    document.getElementById("scoreDisplay").innerText = `Score: ${String(score).padStart(4, '0')}`;
+    let heartStrings = "";
+    for(let i=0; i<3; i++) { heartStrings += i < lives ? "❤️" : "🖤"; }
+    document.getElementById("livesDisplay").innerText = `Životi: ${heartStrings}`;
+}
+
+function loadLevel(index) {
+    map = levels[index];
+    gameOver = false;
+    gameWon = false;
+    isPaused = false;
+    document.getElementById("pauseBtn").innerText = "Pauziraj";
+    
+    gates = [];
+    coins = [];
+    fireZones = [];
+    activeFireIndex = -1;
+    fireState = "off";
+    fireTimer = 0;
+    
+    ghost.active = false;
+    ghost.x = -100; ghost.y = -100;
+    portalA.active = false; portalA.x = -100; portalA.y = -100;
+    portalB.active = false; portalB.x = -100; portalB.y = -100;
+    
+    for (let r = 0; r < 8; r++) {
+        for (let c = 0; c < 8; c++) {
+            if (map[r][c] === 4) {
+                player.x = c * TILE_SIZE;
+                player.y = r * TILE_SIZE;
+            } else if (map[r][c] === 5) {
+                enemy.x = c * TILE_SIZE;
+                enemy.y = r * TILE_SIZE;
+            } else if (map[r][c] === 6) {
+                ghost.x = c * TILE_SIZE;
+                ghost.y = r * TILE_SIZE;
+                ghost.active = true;
+                ghost.visible = true;
+            } else if (map[r][c] === 7) {
+                portalA.x = c * TILE_SIZE;
+                portalA.y = r * TILE_SIZE;
+                portalA.active = true;
+            } else if (map[r][c] === 8) {
+                portalB.x = c * TILE_SIZE;
+                portalB.y = r * TILE_SIZE;
+                portalB.active = true;
+            } else if (map[r][c] === 9) {
+                fireZones.push({ row: r, col: c });
+            } else if (map[r][c] === 2) {
+                gates.push({ row: r, col: c });
+            } else if (map[r][c] === 0) {
+                coins.push({ row: r, col: c });
+            }
+        }
+    }
+    
+    enemy.speed = Math.max(10, 36 - (index * 0.9));
+    ghost.speed = Math.max(15, 45 - (index * 1.5));
+    enemy.counter = 0;
+    ghost.counter = 0;
+    
+    document.getElementById("statusDisplay").innerText = "Pobegni!";
+    document.getElementById("statusDisplay").style.color = "#00ffcc";
+    updateUI();
+}
+
+function handleLifeLoss(message, animText, type) {
+    lives--;
+    causeOfDeath = type;
+    sounds.lose();
+    updateUI();
+    triggerFlashEffect("#ff0055");
+    startTextAnimation(animText, "#ff0055");
+    
+    if (lives <= 0) {
+        gameOver = true;
+        isPaused = true; 
+        document.getElementById("statusDisplay").innerText = "IGRA ZAVRŠENA!";
+        document.getElementById("statusDisplay").style.color = "#ff0055";
+        setTimeout(() => { endGameMenu(false); }, 1500);
+    } else {
+        document.getElementById("statusDisplay").innerText = message;
+        document.getElementById("statusDisplay").style.color = "#ff9900";
+        isPaused = true;
+        setTimeout(() => { loadLevel(currentLevelIndex); }, 1500);
+    }
+}
+
+if (!window.gateIntervalSet) {
+    setInterval(() => {
+        if (!gameOver && !gameWon && !isPaused && gates.length > 0 && document.getElementById("gameScreen").style.display === "flex") {
+            gatesOpen = !gatesOpen;
+            sounds.gate();
+
+            if (!gatesOpen) {
+                const pCol = Math.floor(player.x / TILE_SIZE);
+                const pRow = Math.floor(player.y / TILE_SIZE);
+                if (gates.some(g => g.row === pRow && g.col === pCol)) {
+                    isPaused = true; 
+                    handleLifeLoss("KAPIJA TE JE ZGNJEČILA!", "💥 ZGNJEČEN! -1❤️", "gate");
+                }
+            }
+        }
+    }, 1800);
+    window.gateIntervalSet = true;
+}
+
+if (!window.ghostIntervalSet) {
+    setInterval(() => {
+        if (!gameOver && !gameWon && !isPaused && ghost.active && document.getElementById("gameScreen").style.display === "flex") {
+            ghost.visible = !ghost.visible;
+            if(ghost.visible) { sounds.ghost(); }
+        }
+    }, 1500);
+    window.ghostIntervalSet = true;
+}
+
+if (!window.fireLogicIntervalSet) {
+    setInterval(() => {
+        if (gameOver || gameWon || isPaused || fireZones.length === 0 || document.getElementById("gameScreen").style.display !== "flex") return;
+
+        fireTimer++;
+        if (fireState === "off") {
+            if (fireTimer >= 10) {
+                activeFireIndex = Math.floor(Math.random() * fireZones.length);
+                fireState = "warning";
+                fireTimer = 0;
+                sounds.fireWarn();
+            }
+        } else if (fireState === "warning") {
+            if (fireTimer >= 7) {
+                fireState = "burning";
+                fireTimer = 0;
+                sounds.fireBurn();
+                checkFireCollision();
+            }
+        } else if (fireState === "burning") {
+            checkFireCollision();
+            if (fireTimer >= 10) {
+                fireState = "off";
+                activeFireIndex = -1;
+                fireTimer = 0;
+            }
+        }
+    }, 200);
+    window.fireLogicIntervalSet = true;
+}
+
+function checkFireCollision() {
+    if (fireState !== "burning" || activeFireIndex === -1) return;
+    const fZone = fireZones[activeFireIndex];
+    const pCol = Math.floor(player.x / TILE_SIZE);
+    const pRow = Math.floor(player.y / TILE_SIZE);
+    
+    if (fZone.row === pRow && fZone.col === pCol && !gameOver && !gameWon && !isPaused) {
+        isPaused = true; 
+        handleLifeLoss("VATRA TE JE SPRŽILA!", "🔥 IZGOREO! -1❤️", "fire");
+    }
+}
+
+function isWalkable(x, y) {
+    const col = Math.floor(x / TILE_SIZE);
+    const row = Math.floor(y / TILE_SIZE);
+    if (col < 0 || col >= 8 || row < 0 || row >= 8) return false;
+    if (map[row][col] === 1) return false;
+    if (map[row][col] === 2 && !gatesOpen) return false;
+    return true;
+}
+
+function isGhostWalkable(x, y) {
+    const col = Math.floor(x / TILE_SIZE);
+    const row = Math.floor(y / TILE_SIZE);
+    if (col < 0 || col >= 8 || row < 0 || row >= 8) return false;
+    if (map[row][col] === 1) return false;
+    return true;
+}
+
+function checkPortals(entity) {
+    if (!portalA.active || !portalB.active) return;
+    if (entity.x === portalA.x && entity.y === portalA.y) {
+        entity.x = portalB.x; entity.y = portalB.y;
+        if(entity === player) { sounds.portal(); startTextAnimation("🌀 TELEPORT!", "#00ccff"); }
+    } else if (entity.x === portalB.x && entity.y === portalB.y) {
+        entity.x = portalA.x; entity.y = portalA.y;
+        if(entity === player) { sounds.portal(); startTextAnimation("🌀 TELEPORT!", "#00ccff"); }
+    }
+}
+
+function moveEnemy() {
+    enemy.counter++;
+    if (enemy.counter < enemy.speed) return;
+    enemy.counter = 0;
+
+    let diffX = player.x - enemy.x;
+    let diffY = player.y - enemy.y;
+    let nextX = enemy.x;
+    let nextY = enemy.y;
+
+    if (Math.abs(diffX) > Math.abs(diffY)) {
+        let targetX = enemy.x + (diffX > 0 ? TILE_SIZE : -TILE_SIZE);
+        if (isWalkable(targetX, enemy.y)) { nextX = targetX; } 
+        else {
+            let targetY = enemy.y + (diffY > 0 ? TILE_SIZE : -TILE_SIZE);
+            if (isWalkable(enemy.x, targetY)) nextY = targetY;
+        }
+    } else {
+        let targetY = enemy.y + (diffY > 0 ? TILE_SIZE : -TILE_SIZE);
+        if (isWalkable(enemy.x, targetY)) { nextY = targetY; } 
+        else {
+            let targetX = enemy.x + (diffX > 0 ? TILE_SIZE : -TILE_SIZE);
+            if (isWalkable(targetX, enemy.y)) nextX = targetX;
+        }
+    }
+
+    enemy.x = nextX; enemy.y = nextY;
+}
+
+function moveGhost() {
+    if (!ghost.active) return;
+    ghost.counter++;
+    if (ghost.counter < ghost.speed) return;
+    ghost.counter = 0;
+
+    const directions = [
+        {x: 0, y: -TILE_SIZE}, {x: 0, y: TILE_SIZE},
+        {x: -TILE_SIZE, y: 0}, {x: TILE_SIZE, y: 0}
+    ];
+    
+    let validMoves = directions.filter(d => isGhostWalkable(ghost.x + d.x, ghost.y + d.y));
+    if (validMoves.length > 0) {
+        let randomMove = validMoves[Math.floor(Math.random() * validMoves.length)];
+        ghost.x += randomMove.x; ghost.y += randomMove.y;
+    }
+}
+
+function movePlayer(dir) {
+    if (gameOver || gameWon || isPaused) return;
+    let nextX = player.x;
+    let nextY = player.y;
+
+    if (dir === "up") nextY -= TILE_SIZE;
+    if (dir === "down") nextY += TILE_SIZE;
+    if (dir === "left") nextX -= TILE_SIZE;
+    if (dir === "right") nextX += TILE_SIZE;
+
+    if (isWalkable(nextX, nextY)) {
+        player.x = nextX; player.y = nextY;
+        sounds.move();
+        checkPortals(player);
+        checkFireCollision();
+    }
+
+    const pCol = Math.floor(player.x / TILE_SIZE);
+    const pRow = Math.floor(player.y / TILE_SIZE);
+
+    let coinIndex = coins.findIndex(c => c.row === pRow && c.col === pCol);
+    if (coinIndex !== -1) {
+        coins.splice(coinIndex, 1);
+        score += 10;
+        sounds.coin();
+        startTextAnimation("+10", "#ffcc00");
+        updateUI();
+    }
+
+    if (map[pRow][pCol] === 3) {
+        sounds.win();
+        let levelBonus = 100;
+        let message = "+100 POENA!";
+        let animText = `NIVO ${currentLevelIndex + 1} REŠEN!`;
+        
+        if (coins.length === 0) {
+            levelBonus += 200;
+            message = "SAVRŠENO OČIŠĆENO! +300!";
+            animText = "SAVRŠENO! ⭐";
+        }
+        
+        score += levelBonus;
+        triggerFlashEffect("#00ff64");
+        startTextAnimation(animText, "#00ff64");
+        stopMovingLoop();
+        
+        if (currentLevelIndex < 29) {
+            currentLevelIndex++;
+            document.getElementById("statusDisplay").innerText = message;
+            isPaused = true;
+            setTimeout(() => { loadLevel(currentLevelIndex); }, 1200);
+        } else {
+            gameWon = true;
+            score += (lives * 250);
+            document.getElementById("statusDisplay").innerText = "KONAČNA POBEDA! ELITNI REKORD!";
+            setTimeout(() => { endGameMenu(true); }, 2500);
+        }
+    }
+}
+
+let moveInterval = null;
+function startMovingLoop(dir) {
+    if (isPaused || gameOver || gameWon) return;
+    if (moveInterval) clearInterval(moveInterval);
+    movePlayer(dir);
+    moveInterval = setInterval(() => movePlayer(dir), 200);
+}
+function stopMovingLoop() { 
+    if (moveInterval) { clearInterval(moveInterval); moveInterval = null; } 
+}
+
+document.getElementById("pauseBtn").addEventListener("click", () => {
+    initAudio();
+    if(gameOver || gameWon) return;
+    isPaused = !isPaused;
+    if(isPaused) {
+        document.getElementById("pauseBtn").innerText = "Nastavi";
+        document.getElementById("statusDisplay").innerText = "PAUZIRANO";
+        document.getElementById("statusDisplay").style.color = "#ff9900";
+        stopMovingLoop();
+    } else {
+        document.getElementById("pauseBtn").innerText = "Pauziraj";
+        document.getElementById("statusDisplay").innerText = "Pobegni!";
+        document.getElementById("statusDisplay").style.color = "#00ffcc";
+    }
+});
+
+document.getElementById("quitBtn").addEventListener("click", () => {
+    initAudio();
+    causeOfDeath = "quit"; 
+    stopMovingLoop();
+    endGameMenu(false);
+});
+
+function endGameMenu(isWin) {
+    isPaused = true;
+    gameOver = true;
+    stopMovingLoop();
+    if (animationId) { cancelAnimationFrame(animationId); animationId = null; }
+    if (score > highScore) {
+        highScore = score;
+        localStorage.setItem("mazeHighScore", highScore);
+    }
+    document.getElementById("highScoreMenu").innerText = `NAJBOLJI REKORD: ${String(highScore).padStart(4, '0')}`;
+    document.getElementById("gameScreen").style.display = "none";
+    document.getElementById("menuScreen").style.display = "flex";
+    
+    if(isWin) {
+        document.getElementById("menuTitle").innerHTML = "LAVIRINT<br><span style='color:#00ff64; font-size: 24px;'>ULTRATRIJUMF! 🏁</span>";
+        document.getElementById("menuSubtitle").innerText = `ČESTITAMO! Prešao si svih 30 nivoa!\nTvoj Score: ${score}`;
+        document.getElementById("continueBtn").style.display = "none";
+    } else {
+        document.getElementById("menuTitle").innerHTML = "LAVIRINT<br><span style='color:#ff0055; font-size: 24px;'>IGRA ZAVRŠENA</span>";
+        if (causeOfDeath === "quit") {
+            document.getElementById("menuSubtitle").innerText = `Prekinuo si igru! Stigao si do nivoa ${currentLevelIndex + 1}/30.\nScore: ${score}`;
+            document.getElementById("continueBtn").style.display = "none";
+        } else {
+            if (causeOfDeath === "gate") document.getElementById("menuSubtitle").innerText = `Kapija te je zgnječila na nivou ${currentLevelIndex + 1}/30!`;
+            else if (causeOfDeath === "ghost") document.getElementById("menuSubtitle").innerText = `Duh te je uništio na nivou ${currentLevelIndex + 1}/30!`;
+            else if (causeOfDeath === "fire") document.getElementById("menuSubtitle").innerText = `Izgoreo si u vatri na nivou ${currentLevelIndex + 1}/30! 🔥`;
+            else document.getElementById("menuSubtitle").innerText = `Đavo te je uhvatio na nivou ${currentLevelIndex + 1}/30!`;
+            document.getElementById("continueLevel").innerText = currentLevelIndex + 1;
+            document.getElementById("continueBtn").style.display = "block";
+        }
+    }
+    document.getElementById("startBtn").innerText = "Nova Igra (Nivo 1)";
+}
+
+function draw() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    for (let r = 0; r < 8; r++) {
+        for (let c = 0; c < 8; c++) {
+            if (map[r][c] === 1) {
+                ctx.fillStyle = "#1e1e38"; ctx.fillRect(c * TILE_SIZE, r * TILE_SIZE, TILE_SIZE, TILE_SIZE);
+                ctx.strokeStyle = "#00ffcc"; ctx.strokeRect(c * TILE_SIZE, r * TILE_SIZE, TILE_SIZE, TILE_SIZE);
+            } else if (map[r][c] === 3) {
+                ctx.fillStyle = "rgba(0, 255, 100, 0.2)"; ctx.fillRect(c * TILE_SIZE, r * TILE_SIZE, TILE_SIZE, TILE_SIZE);
+                ctx.strokeStyle = "#00ff64"; ctx.lineWidth = 3; ctx.strokeRect(c * TILE_SIZE + 4, r * TILE_SIZE + 4, TILE_SIZE - 8, TILE_SIZE - 8); ctx.lineWidth = 1;
+            }
+        }
+    }
+
+    coins.forEach(coin => {
+        ctx.shadowBlur = 6; ctx.shadowColor = "#ffcc00"; ctx.fillStyle = "#ffcc00";
+        ctx.beginPath(); ctx.arc(coin.col * TILE_SIZE + 20, coin.row * TILE_SIZE + 20, 5, 0, Math.PI * 2); ctx.fill(); ctx.shadowBlur = 0;
+    });
+
+    gates.forEach(g => {
+        if (gatesOpen) {
+            ctx.strokeStyle = "#ff9900"; ctx.lineWidth = 3; ctx.strokeRect(g.col * TILE_SIZE + 6, g.row * TILE_SIZE + 6, TILE_SIZE - 12, TILE_SIZE - 12); ctx.lineWidth = 1;
+        } else {
+            ctx.fillStyle = "#ff9900"; ctx.fillRect(g.col * TILE_SIZE + 2, g.row * TILE_SIZE + 2, TILE_SIZE - 4, TILE_SIZE - 4);
+        }
+    });
+
+    if (portalA.active && portalB.active) {
+        ctx.font = "24px Arial"; ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.shadowBlur = 10;
+        ctx.shadowColor = "#00a2ff"; ctx.fillText("🌀", portalA.x + 20, portalA.y + 22);
+        ctx.shadowColor = "#ff7700"; ctx.fillText("🌀", portalB.x + 20, portalB.y + 22); ctx.shadowBlur = 0;
+    }
+
+    if (activeFireIndex !== -1 && fireZones[activeFireIndex]) {
+        const zone = fireZones[activeFireIndex];
+        ctx.save(); 
+        if (fireState === "warning") {
+            let pulse = Math.abs(Math.sin(Date.now() / 100));
+            ctx.fillStyle = `rgba(255, 150, 0, ${0.2 + pulse * 0.4})`; ctx.fillRect(zone.col * TILE_SIZE, zone.row * TILE_SIZE, TILE_SIZE, TILE_SIZE);
+            ctx.strokeStyle = "#ff6a00"; ctx.strokeRect(zone.col * TILE_SIZE + 2, zone.row * TILE_SIZE + 2, TILE_SIZE - 4, TILE_SIZE - 4);
+        } else if (fireState === "burning") {
+            ctx.fillStyle = "rgba(255, 0, 0, 0.3)"; ctx.fillRect(zone.col * TILE_SIZE, zone.row * TILE_SIZE, TILE_SIZE, TILE_SIZE);
+            ctx.font = "26px Arial"; ctx.textAlign = "center"; ctx.textBaseline = "middle"; ctx.fillText("🔥", zone.col * TILE_SIZE + 20, zone.row * TILE_SIZE + 22);
+        }
+        ctx.restore(); 
+    }
+
+    if (!gameOver && !gameWon && !isPaused && document.getElementById("gameScreen").style.display === "flex") {
+        moveEnemy(); moveGhost();
+    }
+
+    ctx.font = "28px Arial"; ctx.textAlign = "center"; ctx.textBaseline = "middle";
+    ctx.shadowBlur = 8; ctx.shadowColor = "#ff0055"; ctx.fillText("😈", enemy.x + 20, enemy.y + 22);
+
+    if (ghost.active && ghost.visible) {
+        ctx.shadowBlur = 8; ctx.shadowColor = "#ffffff"; ctx.fillText("👻", ghost.x + 20, ghost.y + 22);
+    }
+
+    ctx.shadowBlur = 8; ctx.shadowColor = "#00ffcc"; ctx.fillText("😎", player.x + 20, player.y + 22); ctx.shadowBlur = 0;
+
+    if (!gameOver && !gameWon && !isPaused) {
+        if (player.x === enemy.x && player.y === enemy.y) {
+            isPaused = true;
+            handleLifeLoss("-1 ŽIVOT!", "😈 UHVAĆEN! -1❤️", "enemy");
+        }
+        if (ghost.active && player.x === ghost.x && player.y === ghost.y) {
+            isPaused = true;
+            handleLifeLoss("DUH TE JE PROKLEO!", "👻 DUH! -1❤️", "ghost");
+        }
+    }
+
+    if (activeAnimation) {
+        ctx.save(); ctx.font = `bold ${activeAnimation.size}px sans-serif`; ctx.fillStyle = activeAnimation.color;
+        ctx.globalAlpha = activeAnimation.alpha; ctx.shadowBlur = 10; ctx.shadowColor = activeAnimation.color;
+        ctx.fillText(activeAnimation.text, canvas.width / 2, canvas.height / 2); ctx.restore();
+        activeAnimation.size += 1.5; activeAnimation.alpha -= 0.025;
+        if (activeAnimation.alpha <= 0) { activeAnimation = null; }
+    }
+
+    if (document.getElementById("gameScreen").style.display === "flex") {
+        animationId = requestAnimationFrame(draw);
+    }
+}
+
+document.getElementById("startBtn").addEventListener("click", () => {
+    initAudio(); document.getElementById("continueBtn").style.display = "none";
+    if (animationId) { cancelAnimationFrame(animationId); }
+    document.getElementById("menuScreen").style.display = "none";
+    document.getElementById("gameScreen").style.display = "flex";
+    currentLevelIndex = 0; lives = 3; score = 0; activeAnimation = null;
+    loadLevel(0); draw();
+});
+
+document.getElementById("continueBtn").addEventListener("click", () => {
+    initAudio(); if (animationId) { cancelAnimationFrame(animationId); }
+    document.getElementById("menuScreen").style.display = "none";
+    document.getElementById("gameScreen").style.display = "flex";
+    lives = 3; gameOver = false; gameWon = false; isPaused = false; activeAnimation = null;
+    loadLevel(currentLevelIndex); draw();
+});
+
+const bindDpad = (btnId, dir) => {
+    const btn = document.getElementById(btnId);
+    
+    btn.addEventListener("touchstart", (e) => {
+        e.preventDefault(); initAudio(); startMovingLoop(dir);
+    });
+    btn.addEventListener("touchend", (e) => {
+        e.preventDefault(); stopMovingLoop();
+    });
+    
+    btn.addEventListener("mousedown", (e) => {
+        initAudio(); startMovingLoop(dir);
+    });
+    btn.addEventListener("mouseup", stopMovingLoop);
+    btn.addEventListener("mouseleave", stopMovingLoop);
+};
+
+bindDpad("btnUp", "up");
+bindDpad("btnDown", "down");
+bindDpad("btnLeft", "left");
+bindDpad("btnRight", "right");
+
+window.addEventListener("keydown", (e) => {
+    if (gameOver || gameWon || isPaused) return;
+    if(["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"].includes(e.key)) {
+        e.preventDefault(); initAudio();
+        if (e.repeat) return; 
+        if (e.key === "ArrowUp")    startMovingLoop("up");
+        if (e.key === "ArrowDown")  startMovingLoop("down");
+        if (e.key === "ArrowLeft")  startMovingLoop("left");
+        if (e.key === "ArrowRight") startMovingLoop("right");
+    }
+});
+window.addEventListener("keyup", (e) => {
+    if(["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"].includes(e.key)) {
+        stopMovingLoop();
+    }
+});
+</script>
+</body>
+</html>
