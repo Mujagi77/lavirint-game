@@ -30,7 +30,7 @@ Cilj je da stigneš do izlaza, izbegneš prepreke i sakupiš što više novčić
 
 ---
 
-## 💾 TEHNOLOGIJE.
+## 💾 TEHNOLOGIJE
 
 - HTML
 - CSS
